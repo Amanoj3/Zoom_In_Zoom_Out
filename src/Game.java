@@ -2,10 +2,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.Arrays;
+
 // to work on next (as of June 14, 2024): work on a feature that allows you to upload audio
 // make git history
 
@@ -18,7 +16,6 @@ public class Game {
 
     private boolean isValidExtension(String extension) {
         String[] validExtensions = ImageIO.getReaderFileSuffixes();
-        //Arrays.stream(ImageIO.getReaderFileSuffixes()).forEach(System.out::println);
         System.out.println("calling isValidExtension method:");
         for (String validExtension : validExtensions) {
             if (validExtension.equals(extension)) { // if the given extension is one of the valid extensions, then return true
@@ -50,31 +47,28 @@ public class Game {
 
     Game() {
 
-        uploadButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
+        uploadButton.addActionListener(_ -> {
+            JFileChooser fileChooser = new JFileChooser();
 
-                // Set file filter to accept only image files
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", ImageIO.getReaderFileSuffixes());
-                fileChooser.setFileFilter(filter);
-                int result = fileChooser.showOpenDialog(gameFrame);
+            // Set file filter to accept only image files
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", ImageIO.getReaderFileSuffixes());
+            fileChooser.setFileFilter(filter);
+            int result = fileChooser.showOpenDialog(gameFrame);
 
-                // Check if a file was selected
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    File selectedFile = fileChooser.getSelectedFile();
-                    String currentFileExtension = obtainFileExtension(selectedFile);
-                    System.out.println("currentFileExtension is " + currentFileExtension);
-                    if (!isValidExtension(currentFileExtension)) {
-                        JOptionPane.showMessageDialog(gameFrame, "Error. Please choose an image-based file.", "Invalid File", JOptionPane.ERROR_MESSAGE);
-                        System.out.println("Error. Please choose an image-based file.");
-                        return;
-                    }
-                    System.out.println("Image-based file chosen");
-                    ImageIcon icon = new ImageIcon(selectedFile.getPath());
-                    JLabel imageRenderer = new JLabel(icon);
-                    renderAgain(imageRenderer);
+            // Check if a file was selected
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                String currentFileExtension = obtainFileExtension(selectedFile);
+                System.out.println("currentFileExtension is " + currentFileExtension);
+                if (!isValidExtension(currentFileExtension)) {
+                    JOptionPane.showMessageDialog(gameFrame, "Error. Please choose an image-based file.", "Invalid File", JOptionPane.ERROR_MESSAGE);
+                    System.out.println("Error. Please choose an image-based file.");
+                    return;
                 }
+                System.out.println("Image-based file chosen");
+                ImageIcon icon = new ImageIcon(selectedFile.getPath());
+                JLabel imageRenderer = new JLabel(icon);
+                renderAgain(imageRenderer);
             }
         });
 
