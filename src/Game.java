@@ -3,16 +3,28 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
-
+import javax.sound.sampled.*;
+import java.io.IOException;
 // to work on next (as of June 14, 2024): work on a feature that allows you to upload audio
-// make git history
 
 public class Game {
     private final JFrame gameFrame = new JFrame("Zoom In - Zoom Out");
 
-    JButton uploadButton = new JButton("Upload Image");
+    private final JButton uploadButton = new JButton("Upload Image");
 
-    //private JPanel gamePanel = new JPanel();
+    private final JButton playPauseButton = new JButton("Play");
+
+    private final JButton zoomInButton = new JButton("Zoom In");
+
+    private final JButton zoomOutButton = new JButton("Zoom Out");
+
+    private Clip audioClip;
+
+    private boolean isPlaying = false;
+
+    JLabel imageRenderer;
+
+    ImageIcon icon;
 
     private boolean isValidExtension(String extension) {
         String[] validExtensions = ImageIO.getReaderFileSuffixes();
@@ -31,11 +43,48 @@ public class Game {
         return (lastIndexOf > 0) ? fileName.substring(lastIndexOf + 1) : "";
     }
 
-    public void renderAgain(JLabel label) {
+    private void playAudio() throws UnsupportedAudioFileException, IOException, LineUnavailableException {
+        File audioFile = new File("src/mixkit-light-rain-loop-2393.wav"); // Replace with your audio file path
+        AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+
+        audioClip = AudioSystem.getClip();
+        audioClip.open(audioStream);
+        audioClip.start();
+        System.out.println("playAudio invoked");
+        playPauseButton.setText("Pause");
+    }
+
+    private void pauseAudio() {
+        if (audioClip != null && audioClip.isRunning()) {
+            audioClip.stop();
+            System.out.println("pauseAudio invoked");
+            playPauseButton.setText("Play");
+        }
+    }
+
+    private void zoom(boolean zoomingIn) {
+        // credits to https://stackoverflow.com/questions/6714045/how-to-resize-jlabel-imageicon
+        Image image = this.icon.getImage(); // transform it
+        Image newimg = image.getScaledInstance(1, 1,  Image.SCALE_SMOOTH); // placeholder
+        if (zoomingIn) {
+            newimg = image.getScaledInstance(this.icon.getIconWidth()+200, this.icon.getIconHeight()+200,  Image.SCALE_SMOOTH); // scale it smoothly
+        }
+        else {
+            newimg = image.getScaledInstance(this.icon.getIconWidth()-200, this.icon.getIconHeight()-200,  Image.SCALE_SMOOTH); // scale it smoothly
+        }
+        ImageIcon newImageIcon = new ImageIcon(newimg);
+        imageRenderer.setIcon(newImageIcon);
+    }
+
+
+    private void renderAgain(JLabel label) {
         gameFrame.getContentPane().removeAll(); // Remove any existing components from the content pane
         gameFrame.getContentPane().add(label, BorderLayout.CENTER); // Add the new JLabel to the content pane
         JPanel buttonContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
         buttonContainer.add(uploadButton);
+        buttonContainer.add(playPauseButton);
+        buttonContainer.add(zoomInButton);
+        buttonContainer.add(zoomOutButton);
         this.gameFrame.add(buttonContainer, BorderLayout.SOUTH);
 
         gameFrame.pack(); // Resize the frame to fit its contents
@@ -46,6 +95,16 @@ public class Game {
     }
 
     Game() {
+
+        zoomInButton.addActionListener(_ ->{
+            System.out.println("Zoom In Button clicked");
+            zoom(true);
+        });
+
+        zoomOutButton.addActionListener(_ ->{
+            System.out.println("Zoom Out Button clicked");
+            zoom(false);
+        });
 
         uploadButton.addActionListener(_ -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -66,18 +125,46 @@ public class Game {
                     return;
                 }
                 System.out.println("Image-based file chosen");
-                ImageIcon icon = new ImageIcon(selectedFile.getPath());
-                JLabel imageRenderer = new JLabel(icon);
+                this.icon = new ImageIcon(selectedFile.getPath());
+
+                // // // // // note to self: this way of resizing is the best solution at the moment
+                /*Image image = this.icon.getImage(); // transform it
+                Image newimg = image.getScaledInstance(120, 120,  java.awt.Image.SCALE_SMOOTH); // scale it smoothly
+                ImageIcon newImageIcon = new ImageIcon(newimg);  // assign to a new ImageIcon instance*/
+                // // // // //
+
+                this.imageRenderer = new JLabel(icon); //original
                 renderAgain(imageRenderer);
             }
         });
 
-        this.gameFrame.setSize(400,300);
+        playPauseButton.addActionListener(_ ->{
+            System.out.println("playPauseButton clicked");
+            isPlaying = !isPlaying;
+                try {
+                    if (isPlaying) {
+                        playAudio();
+                    }
+                    else {
+                        pauseAudio();
+                    }
+                } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+                    throw new RuntimeException(e);
+                }
+        });
+
+        this.gameFrame.setSize(1000,300);
         this.gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.gameFrame.setVisible(true);
         this.uploadButton.setPreferredSize(new Dimension(150, 50));
+        this.playPauseButton.setPreferredSize(new Dimension(150,50));
+        this.zoomInButton.setPreferredSize(new Dimension(150, 50));
+        this.zoomOutButton.setPreferredSize(new Dimension(150, 50));
         JPanel buttonContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
         buttonContainer.add(uploadButton);
+        buttonContainer.add(playPauseButton);
+        buttonContainer.add(zoomInButton);
+        buttonContainer.add(zoomOutButton);
         this.gameFrame.add(buttonContainer, BorderLayout.SOUTH);
 
     }
