@@ -26,6 +26,10 @@ public class Game {
 
     ImageIcon icon;
 
+    int iconWidth;
+
+    int iconHeight;
+
     private boolean isValidExtension(String extension) {
         String[] validExtensions = ImageIO.getReaderFileSuffixes();
         System.out.println("calling isValidExtension method:");
@@ -64,13 +68,18 @@ public class Game {
 
     private void zoom(boolean zoomingIn) {
         // credits to https://stackoverflow.com/questions/6714045/how-to-resize-jlabel-imageicon
+        int zoomFactor = 50;
         Image image = this.icon.getImage(); // transform it
         Image newimg = image.getScaledInstance(1, 1,  Image.SCALE_SMOOTH); // placeholder
         if (zoomingIn) {
-            newimg = image.getScaledInstance(this.icon.getIconWidth()+200, this.icon.getIconHeight()+200,  Image.SCALE_SMOOTH); // scale it smoothly
+            iconWidth = iconWidth + zoomFactor;
+            iconHeight = iconHeight + zoomFactor;
+            newimg = image.getScaledInstance(iconWidth, iconHeight,  Image.SCALE_SMOOTH); // scale it smoothly
         }
         else {
-            newimg = image.getScaledInstance(this.icon.getIconWidth()-200, this.icon.getIconHeight()-200,  Image.SCALE_SMOOTH); // scale it smoothly
+            iconWidth = iconWidth - zoomFactor;
+            iconHeight = iconHeight - zoomFactor;
+            newimg = image.getScaledInstance(iconWidth, iconHeight,  Image.SCALE_SMOOTH); // scale it smoothly
         }
         ImageIcon newImageIcon = new ImageIcon(newimg);
         imageRenderer.setIcon(newImageIcon);
@@ -91,6 +100,8 @@ public class Game {
 
         gameFrame.revalidate(); // Revalidate the container to update the layout
         gameFrame.repaint(); // Repaint the container to reflect the changes
+        iconHeight = icon.getIconHeight();
+        iconWidth = icon.getIconWidth();
         System.out.println("render Again over");
     }
 
@@ -126,7 +137,6 @@ public class Game {
                 }
                 System.out.println("Image-based file chosen");
                 this.icon = new ImageIcon(selectedFile.getPath());
-
                 // // // // // note to self: this way of resizing is the best solution at the moment
                 /*Image image = this.icon.getImage(); // transform it
                 Image newimg = image.getScaledInstance(120, 120,  java.awt.Image.SCALE_SMOOTH); // scale it smoothly
